@@ -1,94 +1,120 @@
-using System;
-using System.Data;
-using Mono.Data.Sqlite;
+ï»¿using System;
 using UnityEngine;
+using Mono.Data.Sqlite;
+using System.Data;
 
 public class DatabaseManager : MonoBehaviour
 {
-    private string dbPath; // Ruta al archivo de base de datos
+    private string dbPath;
 
-    void Start()
+    private void Awake()
     {
-        // Define la ruta al archivo .db (en persistentDataPath para que persista entre ejecuciones)
-        dbPath = "URI=file:" + Application.persistentDataPath + "/users.db";
-        CreateDatabaseIfNotExists(); // Crea la DB y tabla si no existe
+        // IMPORTANT: Utilitzem persistentDataPath perquÃ¨ sobrevisqui a builds
+        dbPath = "URI=file:" + Application.persistentDataPath + "/usuaris.db";
+        InitializeDatabase();
     }
 
-    // Método para crear la DB y la tabla de usuarios
-    private void CreateDatabaseIfNotExists()
+    private void InitializeDatabase()
     {
-        using (var connection = new SqliteConnection(dbPath))
+        try
         {
-            connection.Open();
-            using (var command = connection.CreateCommand())
+            using (var conn = new SqliteConnection(dbPath))
             {
-                // Crea tabla Users con username (único) y password (simple, sin hash por ahora)
-                command.CommandText = "CREATE TABLE IF NOT EXISTS Users (Username TEXT PRIMARY KEY, Password TEXT)";
-                command.ExecuteNonQuery();
-            }
-        }
-        Debug.Log("Base de datos creada en: " + dbPath);
-    }
-
-    // Método para registrar un nuevo usuario
-    public bool RegisterUser(string username, string password)
-    {
-        if (string.IsNullOrEmpty(username) || string.IsNullOrEmpty(password))
-        {
-            Debug.LogError("Username o password vacíos");
-            return false;
-        }
-
-        using (var connection = new SqliteConnection(dbPath))
-        {
-            connection.Open();
-            using (var command = connection.CreateCommand())
-            {
-                // Verifica si el usuario ya existe
-                command.CommandText = "SELECT COUNT(*) FROM Users WHERE Username = @username";
-                command.Parameters.AddWithValue("@username", username);
-                int count = Convert.ToInt32(command.ExecuteScalar());
-
-                if (count > 0)
+                conn.Open();
+                using (var cmd = conn.CreateCommand())
                 {
-                    Debug.Log("Usuario ya existe");
-                    return false;
+                    cmd.CommandText = @"
+                        CREATE TABLE IF NOT EXISTS Usuaris (
+                            UserID      INTEGER PRIMARY KEY AUTOINCREMENT,
+                            Username    TEXT    UNIQUE NOT NULL,
+                            Password    TEXT    NOT NULL
+                        )";
+                    cmd.ExecuteNonQuery();
                 }
-
-                // Inserta el nuevo usuario
-                command.CommandText = "INSERT INTO Users (Username, Password) VALUES (@username, @password)";
-                command.Parameters.AddWithValue("@password", password); // En producción, hashea la password (ej. con SHA256)
-                command.ExecuteNonQuery();
-                Debug.Log("Usuario registrado: " + username);
-                return true;
             }
+            Debug.Log("Base de dades inicialitzada correctament");
+        }
+        catch (Exception e)
+        {
+            Debug.LogError("Error creant base de dades: " + e.Message);
         }
     }
 
-    // Método para login
-    public bool LoginUser(string username, string password)
+    public string RegisterUser(string username, string password)
     {
-        using (var connection = new SqliteConnection(dbPath))
-        {
-            connection.Open();
-            using (var command = connection.CreateCommand())
-            {
-                command.CommandText = "SELECT COUNT(*) FROM Users WHERE Username = @username AND Password = @password";
-                command.Parameters.AddWithValue("@username", username);
-                command.Parameters.AddWithValue("@password", password);
-                int count = Convert.ToInt32(command.ExecuteScalar());
+        if (string.IsNullOrWhiteSpace(username))
+            return "El nom d'usuari no pot estar buit";
 
-                if (count > 0)
+        if (password.Length < 8)
+            return "La contrasenya ha de tenir mÃ­nim 8 carÃ cters";
+
+        try
+        {
+            using (var conn = new SqliteConnection(dbPath))
+            {
+                conn.Open();
+                using (var cmd = conn.CreateCommand())
                 {
-                    Debug.Log("Login exitoso: " + username);
-                    return true;
-                }
-                else
-                {
-                    Debug.Log("Login fallido");
-                    return false;
+                    // Comprovem si ja existeix
+                    cmd.CommandText = "SELECT COUNT(*) FROM Usuaris WHERE Username = @user";
+                    cmd.Parameters.AddWithValue("@user", username);
+                    long count = (long)cmd.ExecuteScalar();
+
+                    if (count > 0)
+                        return "Aquest usuari ja existeix";
+
+                    // Registre
+                    cmd.CommandText = "INSERT INTO Usuaris (Username, Password) VALUES (@user, @pass)";
+                    cmd.Parameters.AddWithValue("@user", username);
+                    cmd.Parameters.AddWithValue("@pass", password); // â˜… En projecte real â†’ HASHEJA!
+                    cmd.ExecuteNonQuery();
+
+                    return "OK";
                 }
             }
+        }
+        catch (SqliteException ex)
+        {
+            if (ex.Message.Contains("UNIQUE constraint failed"))
+                return "Aquest usuari ja existeix";
+            return "Error de base de dades: " + ex.Message;
+        }
+        catch (Exception ex)
+        {
+            return "Error inesperat: " + ex.Message;
+        }
+    }
+
+    public (bool success, string message, int userId) LoginUser(string username, string password)
+    {
+        try
+        {
+            using (var conn = new SqliteConnection(dbPath))
+            {
+                conn.Open();
+                using (var cmd = conn.CreateCommand())
+                {
+                    cmd.CommandText = "SELECT UserID FROM Usuaris WHERE Username = @user AND Password = @pass";
+                    cmd.Parameters.AddWithValue("@user", username);
+                    cmd.Parameters.AddWithValue("@pass", password);
+
+                    var result = cmd.ExecuteScalar();
+
+                    if (result != null)
+                    {
+                        int userId = Convert.ToInt32(result);
+                        return (true, "Login correcte", userId);
+                    }
+                    else
+                    {
+                        return (false, "Usuari o contrasenya incorrectes", -1);
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            return (false, "Error de connexiÃ³: " + ex.Message, -1);
         }
     }
 }
