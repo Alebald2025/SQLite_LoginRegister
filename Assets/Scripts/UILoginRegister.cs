@@ -67,7 +67,7 @@ public class UILoginRegister : MonoBehaviour
 
     private void LoadMainScene()
     {
-        SceneManager.LoadScene("MainMenu"); // ← canvia al nom de la teva escena següent
+        SceneManager.LoadScene("MainMenu");
     }
 
     private void ShowMessage(string msg, Color color)
