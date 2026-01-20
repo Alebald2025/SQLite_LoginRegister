@@ -1,91 +1,154 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
-using TMPro; // si fas servir TextMeshPro
+using TMPro;
+using System.Collections;
 
 public class UILoginRegister : MonoBehaviour
 {
-    [Header("Components UI")]
-    [SerializeField] private TMP_InputField usernameField;
-    [SerializeField] private TMP_InputField passwordField;
+    [Header("--- Panel Login ---")]
+    [SerializeField] private TMP_InputField loginUsernameField;
+    [SerializeField] private TMP_InputField loginPasswordField;
     [SerializeField] private Button loginButton;
+
+    [Header("--- Panel Register ---")]
+    [SerializeField] private TMP_InputField registerUsernameField;
+    [SerializeField] private TMP_InputField registerPasswordField;
     [SerializeField] private Button registerButton;
-    [SerializeField] private TextMeshProUGUI messageText;     // ← per mostrar errors/èxits
+
+    [Header("Mensaje único (puede estar fuera de los paneles)")]
+    [SerializeField] private TextMeshProUGUI feedbackText;
+    [SerializeField] private float mensajeDuracion = 4f; // segundos que se muestra el mensaje
+    [SerializeField] private Color colorExito = Color.green;
+    [SerializeField] private Color colorError = new Color(1f, 0.3f, 0.3f); // rojo claro
+    [SerializeField] private Color colorInfo = new Color(1f, 0.9f, 0.4f); // amarillo/naranja
 
     private DatabaseManager dbManager;
+    private Coroutine hideMessageCoroutine;
+
+    private void Awake()
+    {
+        dbManager = FindObjectOfType<DatabaseManager>();
+    }
 
     private void Start()
     {
-        dbManager = FindObjectOfType<DatabaseManager>();
+        if (loginButton != null)
+            loginButton.onClick.AddListener(OnLogin);
 
-        loginButton.onClick.AddListener(OnLogin);
-        registerButton.onClick.AddListener(OnRegister);
+        if (registerButton != null)
+            registerButton.onClick.AddListener(OnRegister);
 
-        ClearMessage();
+        HideFeedback();
     }
 
-    private void OnRegister()
-    {
-        string user = usernameField.text.Trim();
-        string pass = passwordField.text;
-
-        string result = dbManager.RegisterUser(user, pass);
-
-        if (result == "OK")
-        {
-            ShowMessage("Registre completat! Pots iniciar sessió.", Color.green);
-        }
-        else
-        {
-            ShowMessage(result, Color.red);
-        }
-    }
-
+    // ────────────────────────────────
+    //          LOGIN
+    // ────────────────────────────────
     private void OnLogin()
     {
-        string user = usernameField.text.Trim();
-        string pass = passwordField.text;
+        string user = GetTrimmedText(loginUsernameField);
+        string pass = loginPasswordField.text;
+
+        if (string.IsNullOrEmpty(user) || string.IsNullOrEmpty(pass))
+        {
+            ShowFeedback("Completa usuario y contraseña", colorInfo);
+            return;
+        }
 
         var (success, message, userId) = dbManager.LoginUser(user, pass);
 
         if (success)
         {
-            ShowMessage("Benvingut!", Color.green);
-            // Guardem qui ha iniciat sessió (opció molt recomanable)
-            PlayerPrefs.SetInt("CurrentUserID", userId);
+            ShowFeedback("Has iniciado sesión correctamente", colorExito);
+
             PlayerPrefs.SetString("CurrentUsername", user);
+            PlayerPrefs.SetInt("CurrentUserID", userId);
             PlayerPrefs.Save();
 
-            // Canvi d'escena després d'un petit retard (més professional)
-            Invoke(nameof(LoadMainScene), 1.2f);
+            Invoke(nameof(CargarEscenaPrincipal), 1.1f);
         }
         else
         {
-            ShowMessage(message, Color.red);
+            ShowFeedback(message, colorError);
         }
     }
 
-    private void LoadMainScene()
+    private void CargarEscenaPrincipal()
     {
         SceneManager.LoadScene("MainMenu");
     }
 
-    private void ShowMessage(string msg, Color color)
+    // ────────────────────────────────
+    //          REGISTER
+    // ────────────────────────────────
+    private void OnRegister()
     {
-        if (messageText != null)
+        string user = GetTrimmedText(registerUsernameField);
+        string pass = registerPasswordField.text;
+
+        if (string.IsNullOrEmpty(user) || string.IsNullOrEmpty(pass))
         {
-            messageText.text = msg;
-            messageText.color = color;
+            ShowFeedback("Completa usuario y contraseña", colorInfo);
+            return;
+        }
+
+        string result = dbManager.RegisterUser(user, pass);
+
+        if (result == "OK")
+        {
+            ShowFeedback("Cuenta creada correctamente • Inicia sesión", colorExito);
+
+            // Limpiar campos (opcional)
+            if (registerUsernameField) registerUsernameField.text = "";
+            if (registerPasswordField) registerPasswordField.text = "";
         }
         else
         {
-            Debug.Log(msg);
+            ShowFeedback(result, colorError);
         }
     }
 
-    private void ClearMessage()
+    // ────────────────────────────────
+    //          Helpers
+    // ────────────────────────────────
+    private string GetTrimmedText(TMP_InputField field)
     {
-        if (messageText != null)
-            messageText.text = "";
+        return field != null ? field.text.Trim() : "";
+    }
+
+    private void ShowFeedback(string mensaje, Color color)
+    {
+        if (feedbackText == null)
+        {
+            Debug.Log(mensaje);
+            return;
+        }
+
+        // Parar corrutina anterior si existe
+        if (hideMessageCoroutine != null)
+            StopCoroutine(hideMessageCoroutine);
+
+        feedbackText.text = mensaje;
+        feedbackText.color = color;
+        feedbackText.gameObject.SetActive(true);
+
+        // Ocultar automáticamente después de X segundos
+        hideMessageCoroutine = StartCoroutine(HideAfterDelay());
+    }
+
+    private IEnumerator HideAfterDelay()
+    {
+        yield return new WaitForSeconds(mensajeDuracion);
+        HideFeedback();
+    }
+
+    private void HideFeedback()
+    {
+        if (feedbackText != null)
+        {
+            feedbackText.text = "";
+            feedbackText.gameObject.SetActive(false);
+        }
     }
 }
