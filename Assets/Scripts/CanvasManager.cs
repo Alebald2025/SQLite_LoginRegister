@@ -8,11 +8,11 @@ public class CanvasManager : MonoBehaviour
     [Header("Configuración")]
     [SerializeField] private RectTransform[] todosLosPaneles; 
     [SerializeField] private int panelInicial = 0; 
-    [SerializeField] private float duracionFade = 0.3f; // Duración del fade in/out
-    [SerializeField] private Ease easeIn = Ease.OutQuad; // Easing para entrada
-    [SerializeField] private Ease easeOut = Ease.InQuad; // Easing para salida
+    [SerializeField] private float duracionFade = 0.3f; 
+    [SerializeField] private Ease easeIn = Ease.OutQuad;
+    [SerializeField] private Ease easeOut = Ease.InQuad;
 
-    private CanvasGroup[] gruposPanel; // Para fade (se crea automáticamente)
+    private CanvasGroup[] gruposPanel;
     private Sequence secuenciaActual;
 
     void Start()
@@ -28,12 +28,11 @@ public class CanvasManager : MonoBehaviour
         DOTween.Kill(secuenciaActual);
         secuenciaActual = DOTween.Sequence();
 
-        // Fade-out todos los que estén activos (excepto el que queremos mostrar)
         for (int i = 0; i < todosLosPaneles.Length; i++)
         {
             if (i != indice && todosLosPaneles[i].gameObject.activeInHierarchy)
             {
-                int idx = i; // capturamos
+                int idx = i;
                 secuenciaActual.Join(gruposPanel[idx].DOFade(0f, duracionFade).SetEase(easeOut)
                     .OnComplete(() => {
                         gruposPanel[idx].blocksRaycasts = false;
@@ -42,7 +41,6 @@ public class CanvasManager : MonoBehaviour
             }
         }
 
-        // Fade-in el seleccionado
         int targetIdx = indice;
         todosLosPaneles[targetIdx].gameObject.SetActive(true);
         gruposPanel[targetIdx].alpha = 0f;
@@ -72,12 +70,10 @@ public class CanvasManager : MonoBehaviour
         gruposPanel = new CanvasGroup[todosLosPaneles.Length];
         for (int i = 0; i < todosLosPaneles.Length; i++)
         {
-            // Agregar CanvasGroup si no existe
             gruposPanel[i] = todosLosPaneles[i].GetComponent<CanvasGroup>();
             if (gruposPanel[i] == null)
                 gruposPanel[i] = todosLosPaneles[i].gameObject.AddComponent<CanvasGroup>();
 
-            // Estado inicial: Ocultos
             gruposPanel[i].alpha = 0f;
             gruposPanel[i].blocksRaycasts = false;
             todosLosPaneles[i].gameObject.SetActive(false);

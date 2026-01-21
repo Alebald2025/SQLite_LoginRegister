@@ -12,7 +12,7 @@ public class PanelAnimation : MonoBehaviour
     {
         Vector2 tamañoFinal = new Vector2(270f, 350f); 
         panelRect.DOSizeDelta(tamañoFinal, duracion)
-                 .SetEase(Ease.OutQuad); // Easing suave (opcional: InOutQuad, etc.)
+                 .SetEase(Ease.OutQuad);
     }
 
     public void Contraer()

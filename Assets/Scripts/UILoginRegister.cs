@@ -20,8 +20,8 @@ public class UILoginRegister : MonoBehaviour
     [SerializeField] private TextMeshProUGUI feedbackText;
     [SerializeField] private float mensajeDuracion = 4f; // segundos que se muestra el mensaje
     [SerializeField] private Color colorExito = Color.green;
-    [SerializeField] private Color colorError = new Color(1f, 0.3f, 0.3f); // rojo claro
-    [SerializeField] private Color colorInfo = new Color(1f, 0.9f, 0.4f); // amarillo/naranja
+    [SerializeField] private Color colorError = new Color(1f, 0.3f, 0.3f); 
+    [SerializeField] private Color colorInfo = new Color(1f, 0.9f, 0.4f);
 
     private DatabaseManager dbManager;
     private Coroutine hideMessageCoroutine;
@@ -42,9 +42,6 @@ public class UILoginRegister : MonoBehaviour
         HideFeedback();
     }
 
-    // ────────────────────────────────
-    //          LOGIN
-    // ────────────────────────────────
     private void OnLogin()
     {
         string user = GetTrimmedText(loginUsernameField);
@@ -79,9 +76,6 @@ public class UILoginRegister : MonoBehaviour
         SceneManager.LoadScene("MainMenu");
     }
 
-    // ────────────────────────────────
-    //          REGISTER
-    // ────────────────────────────────
     private void OnRegister()
     {
         string user = GetTrimmedText(registerUsernameField);
@@ -99,7 +93,6 @@ public class UILoginRegister : MonoBehaviour
         {
             ShowFeedback("Cuenta creada correctamente • Inicia sesión", colorExito);
 
-            // Limpiar campos (opcional)
             if (registerUsernameField) registerUsernameField.text = "";
             if (registerPasswordField) registerPasswordField.text = "";
         }
@@ -109,9 +102,6 @@ public class UILoginRegister : MonoBehaviour
         }
     }
 
-    // ────────────────────────────────
-    //          Helpers
-    // ────────────────────────────────
     private string GetTrimmedText(TMP_InputField field)
     {
         return field != null ? field.text.Trim() : "";
@@ -125,7 +115,6 @@ public class UILoginRegister : MonoBehaviour
             return;
         }
 
-        // Parar corrutina anterior si existe
         if (hideMessageCoroutine != null)
             StopCoroutine(hideMessageCoroutine);
 
@@ -133,7 +122,6 @@ public class UILoginRegister : MonoBehaviour
         feedbackText.color = color;
         feedbackText.gameObject.SetActive(true);
 
-        // Ocultar automáticamente después de X segundos
         hideMessageCoroutine = StartCoroutine(HideAfterDelay());
     }
 

@@ -9,7 +9,6 @@ public class DatabaseManager : MonoBehaviour
 
     private void Awake()
     {
-        // IMPORTANT: Utilitzem persistentDataPath perquè sobrevisqui a builds
         dbPath = "URI=file:" + Application.persistentDataPath + "/usuaris.db";
         InitializeDatabase();
     }
@@ -55,7 +54,7 @@ public class DatabaseManager : MonoBehaviour
                 conn.Open();
                 using (var cmd = conn.CreateCommand())
                 {
-                    // Comprovem si ja existeix
+                    // Comprobar si existe
                     cmd.CommandText = "SELECT COUNT(*) FROM Usuaris WHERE Username = @user";
                     cmd.Parameters.AddWithValue("@user", username);
                     long count = (long)cmd.ExecuteScalar();
@@ -63,10 +62,10 @@ public class DatabaseManager : MonoBehaviour
                     if (count > 0)
                         return "Aquest usuari ja existeix";
 
-                    // Registre
+                    // Registrarse
                     cmd.CommandText = "INSERT INTO Usuaris (Username, Password) VALUES (@user, @pass)";
                     cmd.Parameters.AddWithValue("@user", username);
-                    cmd.Parameters.AddWithValue("@pass", password); // ★ En projecte real → HASHEJA!
+                    cmd.Parameters.AddWithValue("@pass", password);
                     cmd.ExecuteNonQuery();
 
                     return "OK";
