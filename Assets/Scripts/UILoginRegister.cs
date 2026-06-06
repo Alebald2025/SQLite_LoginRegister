@@ -76,6 +76,14 @@ public class UILoginRegister : MonoBehaviour
         SceneManager.LoadScene("Game");
     }
 
+    public void CerrarSesion()
+    {
+        PlayerPrefs.DeleteKey("CurrentUsername");
+        PlayerPrefs.DeleteKey("CurrentUserID");
+        PlayerPrefs.Save();
+        SceneManager.LoadScene("MainMenu");
+    }
+
     private void OnRegister()
     {
         string user = GetTrimmedText(registerUsernameField);

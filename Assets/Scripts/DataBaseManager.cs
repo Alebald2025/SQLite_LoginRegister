@@ -42,10 +42,10 @@ public class DatabaseManager : MonoBehaviour
     public string RegisterUser(string username, string password)
     {
         if (string.IsNullOrWhiteSpace(username))
-            return "El nom d'usuari no pot estar buit";
+            return "El nombre de usuario no puede estar vacio";
 
         if (password.Length < 8)
-            return "La contrasenya ha de tenir mínim 8 caràcters";
+            return "La contraseña debe tener minimo 8 caracteres";
 
         try
         {
@@ -60,7 +60,7 @@ public class DatabaseManager : MonoBehaviour
                     long count = (long)cmd.ExecuteScalar();
 
                     if (count > 0)
-                        return "Aquest usuari ja existeix";
+                        return "Este usuario ya existe";
 
                     // Registrarse
                     cmd.CommandText = "INSERT INTO Usuaris (Username, Password) VALUES (@user, @pass)";
@@ -75,7 +75,7 @@ public class DatabaseManager : MonoBehaviour
         catch (SqliteException ex)
         {
             if (ex.Message.Contains("UNIQUE constraint failed"))
-                return "Aquest usuari ja existeix";
+                return "Este usuario ya existe";
             return "Error de base de dades: " + ex.Message;
         }
         catch (Exception ex)
@@ -102,18 +102,18 @@ public class DatabaseManager : MonoBehaviour
                     if (result != null)
                     {
                         int userId = Convert.ToInt32(result);
-                        return (true, "Login correcte", userId);
+                        return (true, "Login correcto", userId);
                     }
                     else
                     {
-                        return (false, "Usuari o contrasenya incorrectes", -1);
+                        return (false, "Usuario o contraseña incorrectos", -1);
                     }
                 }
             }
         }
         catch (Exception ex)
         {
-            return (false, "Error de connexió: " + ex.Message, -1);
+            return (false, "Error de connexión: " + ex.Message, -1);
         }
     }
 }
