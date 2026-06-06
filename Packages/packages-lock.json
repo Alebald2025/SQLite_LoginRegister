@@ -1,7 +1,5 @@
 {
   "dependencies": {
-<<<<<<< HEAD
-=======
     "com.merry-yellow.code-assist": {
       "version": "file:com.merry-yellow.code-assist",
       "depth": 0,
@@ -227,7 +225,6 @@
       },
       "url": "https://packages.unity.com"
     },
->>>>>>> CambiosVisuales
     "com.unity.modules.ai": {
       "version": "1.0.0",
       "depth": 0,
