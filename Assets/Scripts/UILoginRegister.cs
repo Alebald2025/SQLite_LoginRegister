@@ -20,7 +20,7 @@ public class UILoginRegister : MonoBehaviour
     [SerializeField] private TextMeshProUGUI feedbackText;
     [SerializeField] private float mensajeDuracion = 4f; // segundos que se muestra el mensaje
     [SerializeField] private Color colorExito = Color.green;
-    [SerializeField] private Color colorError = new Color(1f, 0.3f, 0.3f); 
+    [SerializeField] private Color colorError = new Color(1f, 0.3f, 0.3f);
     [SerializeField] private Color colorInfo = new Color(1f, 0.9f, 0.4f);
 
     private DatabaseManager dbManager;
@@ -73,7 +73,7 @@ public class UILoginRegister : MonoBehaviour
 
     private void CargarEscenaPrincipal()
     {
-        SceneManager.LoadScene("MainMenu");
+        SceneManager.LoadScene("Game");
     }
 
     private void OnRegister()
@@ -118,7 +118,8 @@ public class UILoginRegister : MonoBehaviour
         if (hideMessageCoroutine != null)
             StopCoroutine(hideMessageCoroutine);
 
-        feedbackText.text = mensaje;
+        string colorHex = ColorUtility.ToHtmlStringRGB(color);
+        feedbackText.text = $"<color=#{colorHex}>{mensaje}</color>";
         feedbackText.color = color;
         feedbackText.gameObject.SetActive(true);
 
@@ -139,4 +140,5 @@ public class UILoginRegister : MonoBehaviour
             feedbackText.gameObject.SetActive(false);
         }
     }
+
 }
